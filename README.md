@@ -121,7 +121,7 @@ Don't edit `config.yaml` on the Pi: `update.sh` stops if it finds edited files.
 **One-time setup on the Pi (read-only access to the repository):**
 1. On the Pi: `ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519`, then `cat ~/.ssh/id_ed25519.pub`.
 2. On GitHub: repository → Settings → Deploy keys → Add deploy key. Paste the key and leave "Allow write access" off.
-3. On the Pi: `git clone git@github.com:<owner>/book-inspector.git ~/book-inspector`.
+3. On the Pi: `git clone git@github.com:eacdc/AI-Packing-PI.git ~/book-inspector`.
 
 For a Pi that already has a copied folder: move `.env` and `data/` into the cloned folder, and run `install.sh` from the clone so the service points there.
 
