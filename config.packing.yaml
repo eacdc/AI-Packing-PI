@@ -1,0 +1,38 @@
+# Book Inspector - packing station settings (second Pi at the packing table).
+# Start with:  python -m app --config config.packing.yaml
+station: packing
+station_name: Packing 1
+data_dir: data
+
+camera:
+  type: picamera       # Camera Module 3 on the ribbon; or "usb" for a webcam (usb_index: 0)
+  width: 2304          # high resolution so the label barcode can be read
+  height: 1296
+  fps: 30
+  exposure_us: 0       # 0 = automatic (books are moved by hand, slowly)
+  gain: 2.0
+  autofocus: true
+  rotate: 0
+  crop: null
+
+sensor:
+  pin: 17              # gate sensor: the book passes it on the way into the box
+  active_low: true
+  capture_delay_ms: 150
+  min_pulse_ms: 30
+  max_pulse_ms: 10000
+
+packing:
+  reference_count: 3   # books per title taught at packing
+  label_scan_ms: 300   # look for a box label this often
+  label_confirm_reads: 2
+  patch_factor: 2.0    # reject if even the closest title's cover differs more than 2x what its references allow
+  min_patch_gap: 20    # the closest title must beat the next one by this many changed pixels, else "show again"
+  photo_width: 1280    # book photos are shrunk to this width (the label scan uses the full frame)
+  conveyor_url: null   # e.g. http://conveyor-pi.local:8080 to reuse its "with cover" photos
+
+erp:
+  enabled: true
+  server: cdcindas.24mycloud.com
+  port: 51175
+  database: IndusEnterprise   # Kolkata

@@ -1,0 +1,7 @@
+# Mock run on a PC (no Pi hardware). Data goes to data-mock/ so it never mixes with real lots.
+mock: true
+data_dir: data-mock
+station_name: Conveyor 1 (mock)
+mock_settings:
+  books_per_hour: 6000
+  odd_book_every: 25

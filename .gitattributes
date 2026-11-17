@@ -1,0 +1,5 @@
+# Edited on Windows, run on the Pi: shell scripts must keep Linux line endings.
+* text=auto
+*.sh text eol=lf
+*.png binary
+*.jpg binary

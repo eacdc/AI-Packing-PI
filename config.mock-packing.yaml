@@ -1,0 +1,16 @@
+# Mock packing station on a PC (no Pi hardware). Data goes to data-mock-packing/.
+station: packing
+station_name: Packing 1 (mock)
+mock: true
+data_dir: data-mock-packing
+camera:
+  width: 1280
+  height: 800
+  exposure_us: 0
+sensor:
+  capture_delay_ms: 100
+  min_pulse_ms: 30
+  max_pulse_ms: 10000
+mock_settings:
+  books_per_title: 3   # 6 titles x 3 = 18 books per mock box (the real job has 12 each)
+  seconds_per_book: 0.5

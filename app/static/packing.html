@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Packing Check</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="packing">
+<header>
+  <span id="station" class="station"></span>
+  <span id="rec" class="badge rec hidden" title="Trial recording: every photo is saved">● REC</span>
+  <span id="job" class="job"></span>
+  <span id="clock" class="clock"></span>
+  <span id="conn" class="dot" title="Connection"></span>
+</header>
+
+<main>
+  <section class="left">
+    <div id="status" class="status idle">
+      <div id="status-title" class="status-title">Not packing</div>
+      <div id="status-msg" class="status-msg"></div>
+    </div>
+    <div class="box-head"><span id="box-caption">Titles</span><span id="box-total" class="hint"></span></div>
+    <ul id="items" class="items"></ul>
+    <div class="row-buttons">
+      <button id="btn-ack" class="danger hidden">OK, checked</button>
+      <button id="btn-reopen" class="hidden">Open box again</button>
+      <button id="btn-cancel-teach" class="hidden">Stop teaching</button>
+    </div>
+    <div class="buttons">
+      <button id="btn-start" class="primary">Start packing</button>
+      <button id="btn-stop">Stop</button>
+      <button id="btn-boxes">Boxes</button>
+      <button id="btn-settings">Settings</button>
+    </div>
+  </section>
+
+  <section class="right">
+    <figure>
+      <img id="img-last" alt="">
+      <figcaption><span id="cap-last">Camera</span><span id="cap-detail" class="detail"></span></figcaption>
+    </figure>
+    <div class="summary">
+      <div><b id="labels">0</b><span>Labels in list</span></div>
+      <div><b id="done">0</b><span>Boxes complete</span></div>
+      <div class="bad"><b id="short">0</b><span>Boxes short</span></div>
+    </div>
+  </section>
+</main>
+
+<!-- Start packing -->
+<div id="dlg-start" class="dialog hidden">
+  <div class="dialog-box">
+    <div class="dialog-head"><h2>Start packing</h2><button class="close" data-close>&times;</button></div>
+    <div class="start-grid">
+      <div class="start-left">
+        <div id="query" class="query">Type job no.</div>
+        <div class="keypad">
+          <button>1</button><button>2</button><button>3</button>
+          <button>4</button><button>5</button><button>6</button>
+          <button>7</button><button>8</button><button>9</button>
+          <button data-key="del">&#9003;</button><button>0</button><button data-key="search" class="primary">Find</button>
+        </div>
+      </div>
+      <div class="start-right">
+        <div id="job-hint" class="hint">Recent jobs</div>
+        <ul id="job-list" class="job-list"></ul>
+      </div>
+    </div>
+    <div class="dialog-foot">
+      <span id="start-error" class="hint"></span>
+      <button id="btn-go" class="primary" disabled>Load labels and start</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings -->
+<div id="dlg-settings" class="dialog hidden">
+  <div class="dialog-box">
+    <div class="dialog-head"><h2>Settings</h2><button class="close" data-close>&times;</button></div>
+    <div id="settings-rows" class="settings-rows"></div>
+    <div class="dialog-foot">
+      <span id="photo-info" class="hint"></span>
+      <button id="btn-test">Take test photo</button>
+      <button id="btn-save" class="primary">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Boxes -->
+<div id="dlg-boxes" class="dialog hidden">
+  <div class="dialog-box">
+    <div class="dialog-head"><h2>Packed boxes</h2><button class="close" data-close>&times;</button></div>
+    <div id="boxes-body" class="history-body"></div>
+  </div>
+</div>
+
+<script src="/static/common.js"></script>
+<script src="/static/packing.js"></script>
+</body>
+</html>

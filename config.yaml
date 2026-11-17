@@ -1,0 +1,54 @@
+# Book Inspector - conveyor station settings.
+# Values changed on the touchscreen (Settings) are kept in data/overrides.json
+# and win over this file. Delete that file to go back to these values.
+
+station_name: Conveyor 1
+mock: false            # true = run without Pi hardware (fake camera + fake sensor)
+data_dir: data
+
+camera:
+  width: 1280
+  height: 800
+  fps: 120
+  exposure_us: 400     # short, so a moving book is not blurred (needs a bright light)
+  gain: 4.0
+  rotate: 0            # 0 / 90 / 180 / 270
+  crop: null           # [x, y, w, h] in pixels after rotate, e.g. [100, 0, 1080, 800]
+
+sensor:
+  pin: 17              # BCM GPIO number (physical pin 11)
+  active_low: true     # PC817 module pulls its output low while the sensor is ON
+  capture_delay_ms: 60 # wait after the book's front edge reaches the sensor before the photo
+  min_pulse_ms: 15     # shorter pulses are noise, ignored
+  max_pulse_ms: 900    # longer = no gap seen (books touching or jam) -> alert
+
+matching:
+  reference_count: 5   # good books photographed at lot start to learn the title
+  work_width: 640      # photos are shrunk to this width before comparing
+  orb_features: 800
+  min_inliers: 15      # never accept fewer matching print points than this
+  inlier_ratio: 0.35   # accept if matching points >= this x (typical between references)
+  diff_level: 50       # grey levels a pixel must differ by to count as changed
+  diff_min_patch: 100  # alert if one patch of the page with more changed pixels than this ...
+  diff_factor: 3.0     # ... (or 3x the patch seen between the reference photos, whichever is bigger)
+  min_keypoints: 60    # pages with less print than this use whole-image comparison
+  ncc_threshold: 0.6
+
+alarm:
+  buzzer_pin: null     # GPIO number for the beep / tower light relay, when added
+  alarm_seconds: 2
+
+storage:
+  save_ok_every: 200   # keep 1 of every N good photos as a sample (0 = none)
+  jpeg_quality: 85
+
+erp:
+  enabled: true
+  server: cdcindas.24mycloud.com
+  port: 51175
+  database: IndusEnterprise   # Kolkata
+  # ERP_USER and ERP_PASSWORD come from the .env file (read-only login)
+
+mock_settings:
+  books_per_hour: 6000
+  odd_book_every: 40   # every Nth book is a different title

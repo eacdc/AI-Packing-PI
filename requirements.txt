@@ -1,0 +1,9 @@
+# On the Pi, scripts/install.sh installs these (picamera2, opencv, gpiozero come from apt).
+# For running in mock mode on a PC:  pip install -r requirements.txt
+fastapi
+uvicorn>=0.29
+pyyaml
+numpy
+opencv-python
+pymssql
+zxing-cpp
