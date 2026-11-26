@@ -260,7 +260,16 @@ $('btn-test').addEventListener('click', async () => {
   const st = await api('/api/test-photo', {});
   showPhoto(`/api/photo/last.jpg?n=${st.photo_seq}`, `Test photo ${new Date().toLocaleTimeString()}`);
   renderStats(st.last);
-  $('photo-info').textContent = cam.tried ? 'Not saved yet: tap Save to keep it' : '';
+  let info = cam.tried ? 'Not saved yet: tap Save to keep it. ' : '';
+  if (st.last && st.last.saved) {
+    // Full-quality copy on the Pi; a laptop on the same network can download it from this page.
+    let page = null;
+    try { page = (await api('/api/test-photos')).page; } catch (e) { /* address unknown */ }
+    info += `Photo saved. On a laptop open ${page || 'http://<Pi address>:8080/test-photos'}`;
+  } else if (st.last) {
+    info += '⚠ Photo not saved to a file';
+  }
+  $('photo-info').textContent = info;
 });
 
 // Zoom for a photo inside a view: buttons, mouse wheel, two-finger pinch, double tap; drag to move around.

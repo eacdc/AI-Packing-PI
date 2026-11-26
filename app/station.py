@@ -186,19 +186,57 @@ class PhotoStation:
     def test_photo(self) -> None:
         """Grab a photo now, without the sensor, to aim the camera and check focus/light."""
         photo = self.prepare_photo(self.camera.grab())
+        saved = self.save_test_photo(photo)
         with self.lock:
             self.latest_photo = photo
             self.photo_seq += 1
-            self.last = {"seq": -int(time.time()), "same": None, "reason": "Test photo", **photo_stats(photo)}
+            self.last = {"seq": -int(time.time()), "same": None, "reason": "Test photo", "saved": saved,
+                         **photo_stats(photo)}
         self._changed()
+
+    # ---- test photos kept as files (full quality, to look at on a PC) -------------
+
+    test_photos_keep = 100
+
+    @property
+    def test_photo_dir(self):
+        return self.cfg.data_dir / "test_photos"
+
+    def save_test_photo(self, photo: np.ndarray) -> str | None:
+        """Save as PNG (no quality loss), named with the time and the exposure/gain it was taken with."""
+        try:
+            folder = self.test_photo_dir
+            folder.mkdir(parents=True, exist_ok=True)
+            exposure, gain = self.camera_now
+            now = time.time()
+            name = (time.strftime("test_%Y-%m-%d_%H-%M-%S", time.localtime(now)) +
+                    f"-{int(now * 1000) % 1000:03d}_exp{int(exposure)}_gain{float(gain):g}.png")
+            cv2.imwrite(str(folder / name), photo)
+            for old in sorted(folder.glob("test_*.png"))[:-self.test_photos_keep]:
+                old.unlink()   # keep the SD card from filling up
+            return name
+        except Exception:
+            log.exception("could not save the test photo")
+            return None
 
     def apply_camera_settings(self) -> None:
         cam = self.cfg["camera"]
         self.camera.set_exposure(cam["exposure_us"], cam["gain"])
+        self._camera_now = (cam["exposure_us"], cam["gain"])
 
     def try_camera(self, exposure_us: int, gain: float) -> None:
         """Exposure/gain for the Settings preview only; Save keeps them, closing reverts."""
         self.camera.set_exposure(int(exposure_us), float(gain))
+        self._camera_now = (int(exposure_us), float(gain))
+
+    _camera_now: tuple | None = None
+
+    @property
+    def camera_now(self) -> tuple:
+        """Exposure and gain the camera is using right now (a value being tried counts)."""
+        if self._camera_now is None:
+            return self.cfg["camera"]["exposure_us"], self.cfg["camera"]["gain"]
+        return self._camera_now
 
     # ---- live preview in Settings -------------------------------------------
 
