@@ -55,6 +55,7 @@ def main() -> None:
     if args.record:
         cfg.values["trial"]["record"] = True
     mock = args.mock or bool(cfg["mock"])
+    cfg.values["mock"] = mock   # the web routes read it (a mock run must never restart this computer)
     packing = cfg["station"] == "packing"
     cam_cfg = cfg["camera"]
     store = Store(cfg.data_dir, cfg["storage"]["jpeg_quality"])

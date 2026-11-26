@@ -18,15 +18,16 @@ Never connect the sensor's black wire to the Pi. The PC817 optocoupler keeps the
 | Sensor brown | +24 V |
 | Sensor blue | 0 V of the 24 V supply |
 | Sensor black (output) | Optocoupler IN1 |
-| Optocoupler input common (−) | 0 V of the 24 V supply |
-| Optocoupler VCC | Pi 3.3 V (pin 1) |
-| Optocoupler GND | Pi GND (pin 6) |
-| Optocoupler OUT1 | Pi GPIO17 (pin 11) |
+| Optocoupler G next to IN1 | 0 V of the 24 V supply |
+| Optocoupler V1 | Pi GPIO17 (pin 11) |
+| Optocoupler G next to V1 | Pi GND (pin 9) |
 
-Before connecting the optocoupler:
-1. Power the sensor and measure black→blue with the multimeter. It should switch between about 24 V and 0 V as a book passes.
-2. Measure the resistor on the optocoupler input. About 1 kΩ is fine at 24 V. If it is 470 Ω or less, add a 2.2 kΩ resistor in series with the black wire.
-3. Do not join the 24 V 0 V to the Pi GND.
+The optocoupler board (HY-M154, PC817) needs no VCC wire: the Pi's internal pull-up holds GPIO17 high, and the board pulls it low while a book is in front of the sensor. Pin 9 is used for GND because the touchscreen may take its power from pins 4 and 6.
+
+Before connecting the Pi:
+1. Power the sensor and measure IN1→G with the multimeter on DC volts. Expect about 23.5 V with a book in front and 0 V without; the channel's LED lights with the book.
+2. Remove the channel's red jumper. It joins the input G to the output G, which would join the 24 V supply's 0 V to the Pi GND. With the power off, beep mode between the two G screws must stay silent.
+3. Measure V1→G (output side) on the 20 kΩ range: a few kΩ with a book, "1" (open) without.
 
 **The 15 mm gap:** mount the sensor close to the books (30–50 mm), with nothing shiny behind the gap, so it switches off cleanly in every gap. Set sensitivity with `scripts/bench_sensor.py` running. If the sensor ever sees two books as one, the app raises a "No gap between books" alert.
 

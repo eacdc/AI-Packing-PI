@@ -84,11 +84,35 @@
 
 <!-- Settings -->
 <div id="dlg-settings" class="dialog hidden">
-  <div class="dialog-box">
-    <div class="dialog-head"><h2>Settings</h2><button class="close" data-close>&times;</button></div>
-    <div id="settings-rows" class="settings-rows"></div>
+  <div class="dialog-box settings-box">
+    <div class="dialog-head">
+      <h2>Settings</h2>
+      <div class="power">
+        <button id="btn-reboot">Restart Pi</button>
+        <button id="btn-poweroff">Shut down</button>
+        <button class="close" data-close>&times;</button>
+      </div>
+    </div>
+    <div class="settings-grid">
+      <div id="settings-rows" class="settings-rows"></div>
+      <div class="cam-panel">
+        <div id="cam-view" class="cam-view">
+          <img id="cam-img" alt="">
+          <div id="cam-empty" class="cam-empty">Tap Live preview or Take test photo</div>
+          <div id="cam-cap" class="cam-cap hidden"></div>
+          <div class="zoom">
+            <button id="zoom-out" title="Zoom out">−</button>
+            <span id="zoom-val">1×</span>
+            <button id="zoom-in" title="Zoom in">+</button>
+            <button id="zoom-fit" title="Whole photo">Fit</button>
+          </div>
+        </div>
+        <div id="cam-stats" class="cam-stats"></div>
+      </div>
+    </div>
     <div class="dialog-foot">
       <span id="photo-info" class="hint"></span>
+      <button id="btn-live">Live preview</button>
       <button id="btn-test">Take test photo</button>
       <button id="btn-save" class="primary">Save</button>
     </div>
@@ -102,6 +126,8 @@
     <div id="history-body" class="history-body"></div>
   </div>
 </div>
+
+<div id="power-msg" class="power-msg hidden"></div>
 
 <script src="/static/common.js"></script>
 <script src="/static/app.js"></script>

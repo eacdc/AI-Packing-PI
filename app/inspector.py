@@ -47,6 +47,10 @@ class Inspector(PhotoStation):
     def photo_for(self, which: str) -> np.ndarray | None:
         return self.latest_photo if which == "last" else self.ref_photo
 
+    def preview_blocked(self) -> str | None:
+        # The preview takes camera frames and CPU, so it never runs beside a lot.
+        return "Stop the lot to use the live preview." if self.lot else None
+
     # ---- teaching and checking -------------------------------------------
 
     def _teach_step(self, photo: np.ndarray) -> None:

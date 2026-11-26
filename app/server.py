@@ -10,6 +10,9 @@ from fastapi import Body, FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
+from .camera_routes import add_camera_routes
+from .system_routes import add_system_routes
+
 log = logging.getLogger("server")
 STATIC = Path(__file__).parent / "static"
 
@@ -106,6 +109,9 @@ def create_app(cfg, inspector, store, erp) -> FastAPI:
         if "camera" in applied:
             inspector.apply_camera_settings()
         return {"applied": applied, "settings": cfg.tunables()}
+
+    add_camera_routes(app, inspector)
+    add_system_routes(app, cfg, inspector.stop_lot)
 
     # Reference photos for the packing station (it fetches the "cover" ones for each title).
     @app.get("/api/references/{job_no}/{mode}")

@@ -10,6 +10,9 @@ from fastapi import Body, FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
+from .camera_routes import add_camera_routes
+from .system_routes import add_system_routes
+
 log = logging.getLogger("server")
 STATIC = Path(__file__).parent / "static"
 
@@ -121,6 +124,9 @@ def create_packing_app(cfg, station, store, erp) -> FastAPI:
         if "camera" in applied:
             station.apply_camera_settings()
         return {"applied": applied, "settings": cfg.tunables()}
+
+    add_camera_routes(app, station)
+    add_system_routes(app, cfg, station.stop_session)
 
     @app.get("/api/boxes")
     def boxes():

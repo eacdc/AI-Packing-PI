@@ -404,6 +404,10 @@ class PackingStation(PhotoStation):
             self.alert = None
         self._changed()
 
+    def preview_blocked(self) -> str | None:
+        # The label scanner and the book photos use the camera while a session is open.
+        return "End the session to use the live preview." if self.session else None
+
     def snapshot(self) -> dict:
         with self.lock:
             box = None

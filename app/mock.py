@@ -86,12 +86,14 @@ class MockLine:
 class MockCamera:
     def __init__(self, line: MockLine):
         self.line = line
+        self.light = 1.0   # exposure x gain relative to 400 µs x 4, so the Settings preview reacts
 
     def set_exposure(self, exposure_us: int, gain: float) -> None:
-        pass
+        self.light = exposure_us * gain / 1600 if exposure_us else 1.0
 
     def grab(self) -> np.ndarray:
-        return self.line.frame()
+        frame = self.line.frame()
+        return frame if self.light == 1.0 else cv2.convertScaleAbs(frame, alpha=self.light)
 
     def close(self) -> None:
         pass

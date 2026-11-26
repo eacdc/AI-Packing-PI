@@ -54,13 +54,29 @@ EOF
 sudo systemctl daemon-reload
 sudo systemctl enable book-inspector
 
+echo "== restart / shut down from the touchscreen (Settings)"
+SUDOERS=/etc/sudoers.d/book-inspector
+echo "$APP_USER ALL=(root) NOPASSWD: /usr/bin/systemctl reboot, /usr/bin/systemctl poweroff" | sudo tee "$SUDOERS.tmp" > /dev/null
+sudo chmod 440 "$SUDOERS.tmp"
+if sudo visudo -cf "$SUDOERS.tmp" > /dev/null; then sudo mv "$SUDOERS.tmp" "$SUDOERS"; else sudo rm -f "$SUDOERS.tmp"; fi
+
 echo "== touchscreen kiosk (Chromium full screen on login)"
 sudo raspi-config nonint do_blanking 1 || true   # keep the screen on
-KIOSK='sh -c "sleep 6; (chromium-browser || chromium) --kiosk --noerrdialogs --disable-infobars --incognito http://localhost:8080"'
+# Newer Raspberry Pi OS names the browser "chromium", older "chromium-browser".
+BROWSER="$(command -v chromium-browser || command -v chromium || echo chromium)"
+KIOSK="sh -c \"sleep 6; $BROWSER --kiosk --noerrdialogs --disable-infobars --incognito --password-store=basic http://localhost:8080\""
+# Re-running install.sh replaces an old kiosk line instead of adding a second one.
 mkdir -p ~/.config/labwc
-grep -q "localhost:8080" ~/.config/labwc/autostart 2>/dev/null || echo "$KIOSK &" >> ~/.config/labwc/autostart
-if [ -f ~/.config/wayfire.ini ] && ! grep -q "localhost:8080" ~/.config/wayfire.ini; then
-  printf '\n[autostart]\nbook_inspector = %s\n' "$KIOSK" >> ~/.config/wayfire.ini
+touch ~/.config/labwc/autostart
+sed -i '/localhost:8080/d' ~/.config/labwc/autostart
+echo "$KIOSK &" >> ~/.config/labwc/autostart
+if [ -f ~/.config/wayfire.ini ]; then
+  sed -i '/localhost:8080/d' ~/.config/wayfire.ini
+  if grep -q '^\[autostart\]' ~/.config/wayfire.ini; then
+    sed -i "/^\[autostart\]/a book_inspector = $KIOSK" ~/.config/wayfire.ini
+  else
+    printf '\n[autostart]\nbook_inspector = %s\n' "$KIOSK" >> ~/.config/wayfire.ini
+  fi
 fi
 
 echo "Done. Reboot, then the screen opens the station by itself."

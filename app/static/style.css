@@ -194,6 +194,57 @@ figcaption {
 .setting .val { text-align: center; font-size: 18px; font-variant-numeric: tabular-nums; }
 .setting button { font-size: 22px; padding: 0; }
 
+/* Settings with the camera check: steppers left, photo right */
+.settings-box { width: calc(100vw - 12px); height: calc(100vh - 12px); }
+.settings-grid { flex: 1; display: grid; grid-template-columns: minmax(290px, 0.75fr) 1.25fr; gap: 10px; min-height: 0; }
+.settings-box .setting { grid-template-columns: 1fr 44px 86px 44px; font-size: 13px; }
+.settings-box .setting .val { font-size: 16px; }
+.cam-panel { display: flex; flex-direction: column; gap: 6px; min-height: 0; min-width: 0; }
+.cam-view {
+  flex: 1;
+  position: relative;
+  background: #000;
+  border-radius: var(--radius);
+  overflow: hidden;
+  min-height: 0;
+  touch-action: none;
+}
+.cam-view img {
+  width: 100%; height: 100%;
+  object-fit: contain;
+  display: block;
+  transform-origin: center;
+  -webkit-user-drag: none;
+}
+.cam-view img:not([src]) { visibility: hidden; }
+.cam-view.zoomed img { cursor: grab; }
+.cam-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); padding: 12px; text-align: center; }
+.cam-cap { position: absolute; left: 0; top: 0; padding: 3px 8px; font-size: 12px; background: rgba(0, 0, 0, 0.6); border-bottom-right-radius: 8px; }
+.cam-cap.live::before { content: "● "; color: var(--bad); }
+.zoom { position: absolute; right: 6px; bottom: 6px; display: flex; align-items: center; gap: 4px; background: rgba(0, 0, 0, 0.55); border-radius: var(--radius); padding: 3px; }
+.zoom button { min-height: 40px; min-width: 44px; padding: 0 8px; font-size: 20px; }
+.zoom #zoom-fit { font-size: 14px; }
+.zoom span { min-width: 34px; text-align: center; font-size: 13px; font-variant-numeric: tabular-nums; }
+.cam-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.cam-stats:empty { display: none; }
+.cam-stats div { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 3px 8px; display: flex; flex-direction: column; }
+.cam-stats b { font-size: 18px; font-variant-numeric: tabular-nums; }
+.cam-stats span { font-size: 11px; color: var(--muted); }
+.cam-stats .verdict { font-weight: 600; color: var(--text); }
+.cam-stats .bad { border-color: var(--warn); }
+.cam-stats .bad .verdict::before { content: "⚠ "; }
+
+.power { display: flex; gap: 6px; }
+.power button:not(.close) { min-height: 36px; font-size: 14px; }
+.power-msg {
+  position: fixed; inset: 0; z-index: 20;
+  background: var(--bg);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; padding: 24px; text-align: center;
+}
+.power-msg h2 { margin: 0; font-size: 26px; }
+.power-msg p { margin: 0; font-size: 17px; color: var(--muted); max-width: 560px; }
+
 /* packing */
 .box-head { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); padding: 0 2px; }
 .items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; min-height: 0; }

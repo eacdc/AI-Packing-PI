@@ -18,6 +18,14 @@ import numpy as np
 log = logging.getLogger("station")
 
 
+def photo_stats(photo: np.ndarray) -> dict:
+    """Numbers for setting up the camera: focus (Laplacian variance), mean brightness, and the
+    share of burnt-out pixels (glare from a glossy cover)."""
+    return {"sharpness": round(float(cv2.Laplacian(photo, cv2.CV_64F).var()), 1),
+            "brightness": round(float(photo.mean()), 1),
+            "glare": round(float((photo >= 250).mean()) * 100, 2)}
+
+
 class PhotoStation:
     process_queue_size = 10
 
@@ -181,14 +189,38 @@ class PhotoStation:
         with self.lock:
             self.latest_photo = photo
             self.photo_seq += 1
-            self.last = {"seq": -int(time.time()), "same": None, "reason": "Test photo",
-                         "sharpness": round(float(cv2.Laplacian(photo, cv2.CV_64F).var()), 1),
-                         "brightness": round(float(photo.mean()), 1)}
+            self.last = {"seq": -int(time.time()), "same": None, "reason": "Test photo", **photo_stats(photo)}
         self._changed()
 
     def apply_camera_settings(self) -> None:
         cam = self.cfg["camera"]
         self.camera.set_exposure(cam["exposure_us"], cam["gain"])
+
+    def try_camera(self, exposure_us: int, gain: float) -> None:
+        """Exposure/gain for the Settings preview only; Save keeps them, closing reverts."""
+        self.camera.set_exposure(int(exposure_us), float(gain))
+
+    # ---- live preview in Settings -------------------------------------------
+
+    preview_stats: dict | None = None
+
+    def preview_blocked(self) -> str | None:
+        """Why the live preview may not run now (None = it may)."""
+        return None
+
+    def preview_jpegs(self, fps: float = 5.0, seconds: float = 300.0):
+        """JPEG frames for the Settings live preview; stops by itself after `seconds`."""
+        period, end, n = 1.0 / fps, time.monotonic() + seconds, 0
+        self.preview_stats = None
+        while time.monotonic() < end and self.preview_blocked() is None:
+            t = time.monotonic()
+            photo = self.prepare_photo(self.camera.grab())
+            ok, buf = cv2.imencode(".jpg", photo, [cv2.IMWRITE_JPEG_QUALITY, 75])
+            n += 1
+            self.preview_stats = {"frame": n, **photo_stats(photo)}
+            if ok:
+                yield buf.tobytes()
+            time.sleep(max(0.0, period - (time.monotonic() - t)))
 
     def jpeg(self, which: str) -> bytes | None:
         with self.lock:
