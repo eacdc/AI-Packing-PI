@@ -170,7 +170,7 @@ $('btn-poweroff').addEventListener('click', () => power('poweroff'));
 
 // ---- camera check in Settings: live preview, test photo, zoom ----
 
-const cam = { live: false, timer: null, tryTimer: null, tried: false, best: 0, zoom: 1, tx: 0, ty: 0, drag: null };
+const cam = { live: false, timer: null, tryTimer: null, tried: false, best: 0 };
 const ZOOMS = [1, 1.5, 2, 3, 4, 6, 8];
 
 function settingValue(section, key) {
@@ -263,47 +263,94 @@ $('btn-test').addEventListener('click', async () => {
   $('photo-info').textContent = cam.tried ? 'Not saved yet: tap Save to keep it' : '';
 });
 
-// Zoom: buttons and mouse wheel; drag to move around a zoomed photo.
-function clampPan() {
-  const view = $('cam-view').getBoundingClientRect(), img = $('cam-img');
-  const ratio = (img.naturalWidth || 16) / (img.naturalHeight || 10);
-  let w = view.width, h = view.width / ratio;
-  if (h > view.height) { h = view.height; w = h * ratio; }
-  const mx = Math.max(0, (w * cam.zoom - view.width) / 2), my = Math.max(0, (h * cam.zoom - view.height) / 2);
-  cam.tx = Math.min(mx, Math.max(-mx, cam.tx));
-  cam.ty = Math.min(my, Math.max(-my, cam.ty));
+// Zoom for a photo inside a view: buttons, mouse wheel, two-finger pinch, double tap; drag to move around.
+function makeZoom(view, img, ui) {
+  const z = { zoom: 1, tx: 0, ty: 0 };
+  const pts = new Map();
+  let drag = null, pinch = null, lastTap = 0;
+
+  function apply() {
+    const box = view.getBoundingClientRect();
+    const ratio = (img.naturalWidth || 16) / (img.naturalHeight || 10);
+    let w = box.width, h = box.width / ratio;
+    if (h > box.height) { h = box.height; w = h * ratio; }
+    const mx = Math.max(0, (w * z.zoom - box.width) / 2), my = Math.max(0, (h * z.zoom - box.height) / 2);
+    z.tx = Math.min(mx, Math.max(-mx, z.tx));
+    z.ty = Math.min(my, Math.max(-my, z.ty));
+    img.style.transform = `translate(${z.tx}px, ${z.ty}px) scale(${z.zoom})`;
+    ui.val.textContent = `${Math.round(z.zoom * 10) / 10}×`;
+    view.classList.toggle('zoomed', z.zoom > 1);
+  }
+  function set(v) {
+    v = Math.min(ZOOMS[ZOOMS.length - 1], Math.max(1, v));
+    const k = v / z.zoom;
+    z.tx *= k; z.ty *= k; z.zoom = v;
+    apply();
+  }
+  function step(d) {
+    const next = d > 0 ? ZOOMS.find((v) => v > z.zoom + 0.01) : [...ZOOMS].reverse().find((v) => v < z.zoom - 0.01);
+    if (next) set(next);
+  }
+  function fit() { z.tx = 0; z.ty = 0; set(1); }
+  const spread = () => { const [a, b] = [...pts.values()]; return Math.hypot(a.x - b.x, a.y - b.y); };
+
+  ui.in.addEventListener('click', () => step(1));
+  ui.out.addEventListener('click', () => step(-1));
+  ui.fit.addEventListener('click', fit);
+  view.addEventListener('wheel', (e) => { e.preventDefault(); step(e.deltaY < 0 ? 1 : -1); }, { passive: false });
+  view.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('button')) return;
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    view.setPointerCapture(e.pointerId);
+    if (pts.size === 2) { pinch = { d: spread() || 1, zoom: z.zoom }; drag = null; return; }
+    const now = Date.now();
+    if (now - lastTap < 300) { lastTap = 0; if (z.zoom > 1) fit(); else set(3); return; }
+    lastTap = now;
+    drag = { x: e.clientX - z.tx, y: e.clientY - z.ty };
+  });
+  view.addEventListener('pointermove', (e) => {
+    if (!pts.has(e.pointerId)) return;
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinch && pts.size === 2) { set(pinch.zoom * spread() / pinch.d); return; }
+    if (!drag || z.zoom === 1) return;
+    z.tx = e.clientX - drag.x; z.ty = e.clientY - drag.y;
+    apply();
+  });
+  ['pointerup', 'pointercancel'].forEach((t) => view.addEventListener(t, (e) => {
+    pts.delete(e.pointerId);
+    pinch = null; drag = null;
+  }));
+  return { fit };
 }
 
-function applyZoom() {
-  clampPan();
-  $('cam-img').style.transform = `translate(${cam.tx}px, ${cam.ty}px) scale(${cam.zoom})`;
-  $('zoom-val').textContent = `${cam.zoom}×`;
-  $('cam-view').classList.toggle('zoomed', cam.zoom > 1);
-}
+makeZoom($('cam-view'), $('cam-img'), { in: $('zoom-in'), out: $('zoom-out'), fit: $('zoom-fit'), val: $('zoom-val') });
 
-function setZoom(z) {
-  const k = z / cam.zoom;
-  cam.tx *= k; cam.ty *= k; cam.zoom = z;
-  applyZoom();
-}
+// ---- tap any photo (last book, reference, history) to open it full screen with zoom ----
 
-function stepZoom(d) {
-  const i = ZOOMS.indexOf(cam.zoom) + d;
-  if (i >= 0 && i < ZOOMS.length) setZoom(ZOOMS[i]);
-}
+const viewer = document.createElement('div');
+viewer.id = 'viewer';
+viewer.className = 'viewer hidden';
+viewer.innerHTML =
+  '<div id="viewer-view" class="cam-view"><img id="viewer-img" alt="">' +
+  '<div id="viewer-cap" class="cam-cap"></div>' +
+  '<button id="viewer-close" class="close viewer-close" title="Close">&times;</button>' +
+  '<div class="zoom"><button id="viewer-out" title="Zoom out">−</button><span id="viewer-val">1×</span>' +
+  '<button id="viewer-in" title="Zoom in">+</button><button id="viewer-fit" class="fit" title="Whole photo">Fit</button></div></div>';
+document.body.appendChild(viewer);
+const viewerZoom = makeZoom($('viewer-view'), $('viewer-img'), { in: $('viewer-in'), out: $('viewer-out'), fit: $('viewer-fit'), val: $('viewer-val') });
 
-$('zoom-in').addEventListener('click', () => stepZoom(1));
-$('zoom-out').addEventListener('click', () => stepZoom(-1));
-$('zoom-fit').addEventListener('click', () => { cam.tx = 0; cam.ty = 0; setZoom(1); });
-$('cam-view').addEventListener('wheel', (e) => { e.preventDefault(); stepZoom(e.deltaY < 0 ? 1 : -1); }, { passive: false });
-$('cam-view').addEventListener('pointerdown', (e) => {
-  if (e.target.closest('.zoom') || cam.zoom === 1) return;
-  cam.drag = { x: e.clientX - cam.tx, y: e.clientY - cam.ty };
-  $('cam-view').setPointerCapture(e.pointerId);
+function closeViewer() {
+  viewer.classList.add('hidden');
+  $('viewer-img').removeAttribute('src');
+}
+$('viewer-close').addEventListener('click', closeViewer);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeViewer(); });
+document.addEventListener('click', (e) => {
+  const img = e.target.closest('figure img[src]');
+  if (!img) return;
+  const cap = img.closest('figure').querySelector('figcaption');
+  $('viewer-img').src = img.src;   // stays on this photo while new books keep passing
+  $('viewer-cap').textContent = cap ? [...cap.children].map((c) => c.textContent).filter(Boolean).join(' · ') || cap.textContent : '';
+  viewer.classList.remove('hidden');
+  viewerZoom.fit();
 });
-$('cam-view').addEventListener('pointermove', (e) => {
-  if (!cam.drag) return;
-  cam.tx = e.clientX - cam.drag.x; cam.ty = e.clientY - cam.drag.y;
-  applyZoom();
-});
-['pointerup', 'pointercancel'].forEach((t) => $('cam-view').addEventListener(t, () => { cam.drag = null; }));

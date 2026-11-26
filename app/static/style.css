@@ -114,6 +114,7 @@ figure {
 }
 figure img { width: 100%; height: 100%; object-fit: contain; display: block; }
 figure img:not([src]) { visibility: hidden; }
+figure img[src] { cursor: zoom-in; }
 figcaption {
   position: absolute;
   left: 0; right: 0; top: 0;
@@ -223,8 +224,11 @@ figcaption {
 .cam-cap.live::before { content: "● "; color: var(--bad); }
 .zoom { position: absolute; right: 6px; bottom: 6px; display: flex; align-items: center; gap: 4px; background: rgba(0, 0, 0, 0.55); border-radius: var(--radius); padding: 3px; }
 .zoom button { min-height: 40px; min-width: 44px; padding: 0 8px; font-size: 20px; }
-.zoom #zoom-fit { font-size: 14px; }
+.zoom #zoom-fit, .zoom .fit { font-size: 14px; }
 .zoom span { min-width: 34px; text-align: center; font-size: 13px; font-variant-numeric: tabular-nums; }
+.viewer { position: fixed; inset: 0; z-index: 15; background: #000; display: flex; }
+.viewer .cam-view { border-radius: 0; }
+.viewer-close { position: absolute; right: 6px; top: 6px; min-width: 48px; min-height: 48px; font-size: 26px; background: rgba(0, 0, 0, 0.55); }
 .cam-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .cam-stats:empty { display: none; }
 .cam-stats div { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 3px 8px; display: flex; flex-direction: column; }
